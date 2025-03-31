@@ -1,3 +1,6 @@
+import ujson as json_parser
+from fuzzywuzzy import fuzz
+from urllib.parse import urlencode
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, File, Form, UploadFile
@@ -76,20 +79,22 @@ def solve_vscode_question(question, file=None):
         result = subprocess.run(["code", "-s"], capture_output=True, text=True)
         result = result.stdout.strip()
         result = json.dumps(result)
-        
+
         return {"answer": result}
-        
+
     except Exception as e:
         return {"error": f"Failed to execute command: {str(e)}"}
 
 # Function GA1Q2: Handle HTTP request using httpie
+
+
 def solve_http_request_question(question, file=None):
     try:
         # Define the target URL
         url = "https://httpbin.org/get"
 
         # Define the parameters (URL encoded automatically by requests)
-        params = {"email": "24ds2000125@ds.study.iitm.ac.in"}
+        params = {"email": "22f1000120@ds.study.iitm.ac.in"}
 
         # Set custom headers to mimic HTTPie behavior
         headers = {"User-Agent": "HTTPie/3.2.4", "Accept": "*/*"}
@@ -112,13 +117,22 @@ def solve_http_request_question(question, file=None):
         return {"error": f"Failed to send HTTP request: {str(e)}"}
 
 # Function GA1Q3: Handle Prettier formatting and SHA256 hashing
+
+
 def solve_prettier_hash_question(question, file=None):
     # Extract the file name dynamically from the question
-    match = re.search(r"Download (.*?) In the directory", question)
+    # Extract the file name dynamically from the question
+    # The pattern is designed to capture the first file name mentioned in the question
+    # For example, in the question "Download file1.txt and file2.txt In the directory",
+    # the pattern will capture "file1.txt"
+    match = re.search(
+        r"Download (.*?)\s*(?:and\s(.*?))?\s*In the directory", question)
+    # print("Match:", match.group(0))
     if not match:
         return {"error": "Could not extract the file name from the question. Ensure the question format is correct."}
 
-    expected_filename = match.group(1).strip()  # Extracted file name from question
+    # Extracted file name from question
+    expected_filename = match.group(1).strip()
 
     if not file:
         return {"error": f"No file uploaded. Expected: {expected_filename}"}
@@ -157,8 +171,11 @@ def solve_prettier_hash_question(question, file=None):
             )
 
             # Extract the hash value from the command output
-            sha256_output = sha256_result.stdout.strip().split(" ")[0] if sha256_result.stdout else "Error computing hash"
-            sha256_output = json.dumps(sha256_output)
+            sha256_output = sha256_result.stdout.strip().split(
+                " ")[0] if sha256_result.stdout else "Error computing hash"
+            # sha256_output = json.dumps(sha256_output)
+
+            print("SHA256 Output:", sha256_output)
 
             return {"answer": sha256_output}
 
@@ -166,6 +183,8 @@ def solve_prettier_hash_question(question, file=None):
         return {"error": f"Failed to process file '{expected_filename}': {str(e)}"}
 
 # Function GA1Q4: Solve Google Sheets formula
+
+
 def solve_google_sheets_question(question, file=None):
     try:
         # Extract formula from question
@@ -177,19 +196,23 @@ def solve_google_sheets_question(question, file=None):
 
         # Handle ARRAY_CONSTRAIN(SEQUENCE(...), rows, cols)
         if "ARRAY_CONSTRAIN" in formula:
-            ac_match = re.search(r'ARRAY_CONSTRAIN\(\s*SEQUENCE\((\d+),\s*(\d+),\s*(-?\d+),\s*(-?\d+)\)\s*,\s*(\d+)\s*,\s*(\d+)\)', formula)
+            ac_match = re.search(
+                r'ARRAY_CONSTRAIN\(\s*SEQUENCE\((\d+),\s*(\d+),\s*(-?\d+),\s*(-?\d+)\)\s*,\s*(\d+)\s*,\s*(\d+)\)', formula)
             if not ac_match:
                 return {"error": "Invalid ARRAY_CONSTRAIN/SEQUENCE format."}
 
-            rows, cols, start, step, limit_rows, limit_cols = map(int, ac_match.groups())
+            rows, cols, start, step, limit_rows, limit_cols = map(
+                int, ac_match.groups())
 
         # Handle INDEX(SEQUENCE(...), 1, SEQUENCE(...))
         elif "INDEX" in formula and "SEQUENCE" in formula:
-            index_match = re.search(r'INDEX\(\s*SEQUENCE\(\s*(\d+),\s*(\d+),\s*(-?\d+),\s*(-?\d+)\)\s*,\s*1\s*,\s*SEQUENCE\(\s*1\s*,\s*(\d+)\)\s*\)', formula)
+            index_match = re.search(
+                r'INDEX\(\s*SEQUENCE\(\s*(\d+),\s*(\d+),\s*(-?\d+),\s*(-?\d+)\)\s*,\s*1\s*,\s*SEQUENCE\(\s*1\s*,\s*(\d+)\)\s*\)', formula)
             if not index_match:
                 return {"error": "Invalid INDEX/SEQUENCE formula."}
 
-            rows, cols, start, step, limit_cols = map(int, index_match.groups())
+            rows, cols, start, step, limit_cols = map(
+                int, index_match.groups())
         else:
             return {"error": "Unsupported formula format."}
 
@@ -210,6 +233,8 @@ def solve_google_sheets_question(question, file=None):
         return {"error": f"Exception occurred: {str(e)}"}
 
 # Function GA1Q5: Solve Office 365 Excel formula
+
+
 def solve_excel_question(question, file=None):
     # Regex pattern to extract numbers from curly braces {}
     pattern = r"\{([\d,\s]+)\}"
@@ -227,7 +252,8 @@ def solve_excel_question(question, file=None):
 
         # Extract `n` (number of elements to take) using regex
         n_match = re.search(r"TAKE\(.*?,\s*(\d+)\)", question)
-        n = int(n_match.group(1)) if n_match else 6  # Default to 6 if not found
+        # Default to 6 if not found
+        n = int(n_match.group(1)) if n_match else 6
 
         # Sort the array based on the sort order
         sorted_array = [x for _, x in sorted(zip(sort_order, array))]
@@ -244,6 +270,8 @@ def solve_excel_question(question, file=None):
         return {"error": f"Failed to process the formula: {str(e)}"}
 
 # Function GA1Q6: Solve HTML hidden input question
+
+
 def solve_hidden_input_question(question, file=None):
     """
     Extracts the value of a hidden input field from an HTML file.
@@ -270,6 +298,8 @@ def solve_hidden_input_question(question, file=None):
         return {"error": f"Failed to extract hidden input: {str(e)}"}
 
 # Function GA1Q7: Solve count Wednesdays question
+
+
 def solve_count_wednesdays_question(question, file=None):
     # Extract date range using regex
     match = re.search(r"(\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})", question)
@@ -299,6 +329,8 @@ def solve_count_wednesdays_question(question, file=None):
         return {"error": f"Failed to compute Wednesdays count: {str(e)}"}
 
 # Function GA1Q8: Solve CSV extraction question
+
+
 def solve_csv_extraction_question(question, file=None):
     if not file:
         return {"error": "No ZIP file uploaded. Please upload a ZIP file containing extract.csv."}
@@ -338,6 +370,8 @@ def solve_csv_extraction_question(question, file=None):
         return {"error": f"Failed to process CSV file: {str(e)}"}
 
 # Function GA1Q9: Solve JSON sorting question
+
+
 def solve_json_sorting_question(question, file=None):
     """
     Sorts a JSON array by age (ascending). If ages are equal, sorts by name (alphabetically).
@@ -363,6 +397,8 @@ def solve_json_sorting_question(question, file=None):
         return {"error": f"Failed to sort JSON data: {str(e)}"}
 
 # Function GA1Q10: Solve JSON conversion question
+
+
 def solve_json_conversion_question(question, file=None):
     try:
         if not file:
@@ -385,7 +421,8 @@ def solve_json_conversion_question(question, file=None):
             key_value_pairs[key] = value
 
         # Compact sorted JSON
-        json_string = json.dumps(key_value_pairs, separators=(',', ':'), sort_keys=True)
+        json_string = json.dumps(
+            key_value_pairs, separators=(',', ':'), sort_keys=True)
 
         # Hash the string
         sha_hash = hashlib.sha256(json_string.encode('utf-8')).hexdigest()
@@ -396,6 +433,8 @@ def solve_json_conversion_question(question, file=None):
         return {"error": f"Failed to process file: {str(e)}"}
 
 # Function GA1Q11: Solve div sum question
+
+
 def solve_div_sum_question(question, file=None):
     if not file:
         return {"error": "No HTML file uploaded. Please upload an HTML file containing div elements."}
@@ -428,6 +467,8 @@ def solve_div_sum_question(question, file=None):
         return {"error": f"Failed to process HTML file: {str(e)}"}
 
 # Function GA1Q12: Solve file encoding sum question
+
+
 def solve_file_encoding_sum_question(question, file=None):
     if not file:
         return {"error": "No ZIP file uploaded. Please upload a ZIP file containing data1.csv, data2.csv, and data3.txt."}
@@ -435,7 +476,8 @@ def solve_file_encoding_sum_question(question, file=None):
     try:
         # 🔹 Extract symbols dynamically from the question using regex
         symbol_pattern = re.findall(r"['\"]?([^\s,.'\"]{1})['\"]?", question)
-        target_symbols = set(symbol_pattern)  # Convert to set to avoid duplicates
+        # Convert to set to avoid duplicates
+        target_symbols = set(symbol_pattern)
 
         if not target_symbols:
             return {"error": "No valid symbols found in the question. Please specify symbols to sum."}
@@ -482,7 +524,8 @@ def solve_file_encoding_sum_question(question, file=None):
                 df["value"] = pd.to_numeric(df["value"], errors="coerce")
 
                 # 🔹 Sum up values for dynamically extracted symbols
-                total_sum += df[df["symbol"].isin(target_symbols)]["value"].sum()
+                total_sum += df[df["symbol"].isin(target_symbols)
+                                ]["value"].sum()
 
             # Convert numpy.int64 to int before returning
             sum = int(total_sum)
@@ -493,26 +536,30 @@ def solve_file_encoding_sum_question(question, file=None):
         return {"error": f"Failed to process ZIP file: {str(e)}"}
 
 # Function GA1Q13: Solve GitHub repository question
+
+
 def solve_github_repo_question(question, file=None):
     return {"answer": "https://raw.githubusercontent.com/PalakAnand30/TDS_1/refs/heads/main/email.json"}
 
 # Function GA1Q14: Solve text replacement question
+
+
 def solve_replace_text_question(question: str, file: UploadFile):
     # Create a temporary directory to extract files
     with tempfile.TemporaryDirectory() as tmpdirname:
         zip_path = os.path.join(tmpdirname, "uploaded.zip")
-        
+
         # Save the uploaded zip file
         with open(zip_path, "wb") as buffer:
             buffer.write(file.file.read())
-        
+
         extract_folder = os.path.join(tmpdirname, "unzipped")
         os.makedirs(extract_folder, exist_ok=True)
-        
+
         # Extract the zip file
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(extract_folder)
-        
+
         # Compile case-insensitive regex for "IITM"
         pattern = re.compile(r'IITM', re.IGNORECASE)
 
@@ -528,7 +575,7 @@ def solve_replace_text_question(question: str, file: UploadFile):
                         f.write(replaced_content)
                 except:
                     continue  # skip non-text files
-        
+
         # Simulate `cat * | sha256sum` by concatenating file contents in sorted order
         concatenated_content = ""
         all_files = sorted(os.listdir(extract_folder))
@@ -539,12 +586,15 @@ def solve_replace_text_question(question: str, file: UploadFile):
                     concatenated_content += f.read()
             except:
                 continue
-        
-        sha256_hash = hashlib.sha256(concatenated_content.encode('utf-8')).hexdigest()
+
+        sha256_hash = hashlib.sha256(
+            concatenated_content.encode('utf-8')).hexdigest()
         sha256_hash = json.dumps(sha256_hash)
         return {"answer": sha256_hash}
-    
+
 # Function GA1Q15: Solve file size filter question
+
+
 def solve_file_size_filter_question(question: str, file: UploadFile):
     # Extract minimum file size using regex
     size_match = re.search(r'at least (\d+) bytes', question)
@@ -573,11 +623,11 @@ def solve_file_size_filter_question(question: str, file: UploadFile):
     # Create a temporary working directory
     with tempfile.TemporaryDirectory() as tmpdir:
         zip_path = os.path.join(tmpdir, "uploaded.zip")
-        
+
         # Save the uploaded ZIP file
         with open(zip_path, "wb") as f:
             f.write(file.file.read())
-        
+
         extract_dir = os.path.join(tmpdir, "unzipped")
         os.makedirs(extract_dir, exist_ok=True)
 
@@ -603,8 +653,10 @@ def solve_file_size_filter_question(question: str, file: UploadFile):
         return {
             "answer": total_size
         }
-    
+
 # Function GA1Q16: Solve file renaming question
+
+
 def solve_rename_files_question(question: str, file: UploadFile):
     def shift_digits(name: str) -> str:
         def replacer(match):
@@ -614,11 +666,11 @@ def solve_rename_files_question(question: str, file: UploadFile):
 
     with tempfile.TemporaryDirectory() as tmpdir:
         zip_path = os.path.join(tmpdir, "uploaded.zip")
-        
+
         # Save uploaded ZIP file
         with open(zip_path, "wb") as f:
             f.write(file.file.read())
-        
+
         base_folder = os.path.join(tmpdir, "unzipped")
         final_folder = os.path.join(tmpdir, "flattened")
         os.makedirs(final_folder, exist_ok=True)
@@ -661,8 +713,10 @@ def solve_rename_files_question(question: str, file: UploadFile):
         sha256_hash = json.dumps(sha256_hash)
 
         return {"answer": sha256_hash}
-    
+
 # Function GA1Q17: Solve file comparison question
+
+
 def solve_compare_files_question(question, file=None):
     if not file:
         return {"error": "No ZIP file uploaded. Please upload a ZIP file containing a.txt and b.txt."}
@@ -689,8 +743,8 @@ def solve_compare_files_question(question, file=None):
 
             # Read files line by line and compare
             with open(a_txt_path, "r", encoding="utf-8", errors="ignore") as f1, \
-                 open(b_txt_path, "r", encoding="utf-8", errors="ignore") as f2:
-                
+                    open(b_txt_path, "r", encoding="utf-8", errors="ignore") as f2:
+
                 a_lines = f1.readlines()
                 b_lines = f2.readlines()
 
@@ -699,7 +753,8 @@ def solve_compare_files_question(question, file=None):
                 return {"error": "Files do not have the same number of lines."}
 
             # Count differing lines
-            differing_lines = sum(1 for line1, line2 in zip(a_lines, b_lines) if line1.strip() != line2.strip())
+            differing_lines = sum(1 for line1, line2 in zip(
+                a_lines, b_lines) if line1.strip() != line2.strip())
             differing_lines = json.dumps(differing_lines)
 
             return {"answer": differing_lines}
@@ -708,13 +763,16 @@ def solve_compare_files_question(question, file=None):
         return {"error": f"Failed to process ZIP file: {str(e)}"}
 
 # Function GA1Q18: Solve SQLite query question
+
+
 def solve_sqlite_query_question(question, file=None):
     try:
         # Extract the ticket type from the question
-        match = re.search(r'total sales of all the items in the "(.*?)" ticket type', question, re.IGNORECASE)
+        match = re.search(
+            r'total sales of all the items in the "(.*?)" ticket type', question, re.IGNORECASE)
         if not match:
             return {"error": "Could not determine the ticket type from the question."}
-        
+
         ticket_type = match.group(1).strip()  # Extracted ticket type
 
         # Construct the SQL query dynamically using the extracted ticket type
@@ -728,6 +786,8 @@ def solve_sqlite_query_question(question, file=None):
         return {"error": f"Failed to generate SQL query: {str(e)}"}
 
 # Function GA2Q1: Solve Markdown documentation question
+
+
 def solve_markdown_documentation_question(question, file=None):
     markdown_content = """# Weekly Step Analysis: Personal Insights and Social Comparison
 
@@ -781,6 +841,8 @@ def solve_markdown_documentation_question(question, file=None):
     return {"answer": markdown_content}
 
 # Function GA2Q2: Compress image
+
+
 def solve_image_compression_question(question: str, file: UploadFile):
     try:
         # Open the uploaded image
@@ -792,7 +854,8 @@ def solve_image_compression_question(question: str, file: UploadFile):
         temp_file.close()  # We'll write to it with PIL
 
         # Save as WebP with lossless compression
-        original_image.save(output_path, format="WEBP", lossless=True, quality=100, method=6)
+        original_image.save(output_path, format="WEBP",
+                            lossless=True, quality=100, method=6)
 
         # Check size
         final_size = os.path.getsize(output_path)
@@ -804,17 +867,22 @@ def solve_image_compression_question(question: str, file: UploadFile):
             }
 
         # Return file as response
-        answer = FileResponse(output_path, media_type="image/webp", filename="compressed.webp")        
+        answer = FileResponse(
+            output_path, media_type="image/webp", filename="compressed.webp")
         return FileResponse(output_path, media_type="image/webp", filename="compressed.webp")
 
     except Exception as e:
         return {"error": str(e)}
-    
+
 # Function GA2Q3: GitHub pages
+
+
 def solve_github_pages_question(question, file=None):
     return {"answer": "https://palakanand30.github.io"}
 
 # Function GA2Q4: Google colab authentication
+
+
 def extract_email_from_question(question: str):
     """
     Extracts the email from the given question text.
@@ -822,10 +890,11 @@ def extract_email_from_question(question: str):
     match = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", question)
     return match.group(0) if match else None
 
+
 def solve_colab_auth_question(question, file=None):
     """
     Simulates the functionality of the original Google Colab script.
-    
+
     - Extracts email from the question.
     - Uses a fixed/flexible token expiry year.
     - Computes the SHA-256 hash of "email year".
@@ -845,6 +914,8 @@ def solve_colab_auth_question(question, file=None):
     return {"answer": hash_output}
 
 # Function GA2Q5: Image brightness colab
+
+
 def solve_colab_brightness_question(question, file=None):
     try:
         if not file:
@@ -873,6 +944,8 @@ def solve_colab_brightness_question(question, file=None):
         return {"error": f"Failed to process image: {str(e)}"}
 
 # Function GA2Q6: Vercel
+
+
 def solve_vercel_api_question(question, file=None):
     if main_app is None:
         return {"error": "Main app not registered."}
@@ -914,19 +987,26 @@ def solve_vercel_api_question(question, file=None):
     }
 
 # Function GA2Q7: GitHub pages
+
+
 def solve_github_action_question(question, file=None):
     return {"answer": "https://github.com/PalakAnand30/mygithubaction"}
 
 # Function GA2Q8: Docker image
+
+
 def solve_docker_image_question(question, file=None):
     return {"answer": "https://hub.docker.com/repository/docker/palakanand30/first_docker_task/general"}
 
-# Function GA2Q9: FastAPI   
+
+# Function GA2Q9: FastAPI
 main_app: FastAPI = None
+
+
 def solve_fastapi_server_question(question, file=None):
     if main_app is None:
         return {"error": "Main app not registered."}
-    
+
     if not file or not file.filename.endswith(".csv"):
         return {"error": "Please upload a valid CSV file."}
 
@@ -967,21 +1047,26 @@ def solve_fastapi_server_question(question, file=None):
     }
 
 # Function GA2Q10: NGROK
+
+
 def solve_llama_model_question(question: str, file: UploadFile = None):
     try:
         # ✅ Path to model and binary (already downloaded in api/)
         base_path = os.path.dirname(__file__)  # 'api/' folder
         llamafile_path = os.path.join(base_path, "llamafile")
-        model_path = os.path.join(base_path, "Llama-3.2-1B-Instruct.Q6_K.llamafile")
+        model_path = os.path.join(
+            base_path, "Llama-3.2-1B-Instruct.Q6_K.llamafile")
 
         # ✅ Ensure permissions to execute
         os.chmod(llamafile_path, 0o755)
 
         # ✅ Step 1: Start llamafile server
-        subprocess.Popen([llamafile_path, model_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen([llamafile_path, model_path],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # ✅ Step 2: Start ngrok tunnel
-        subprocess.Popen(["ngrok", "http", "8080"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen(["ngrok", "http", "8080"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # ✅ Step 3: Wait for ngrok to be ready
         time.sleep(5)
@@ -995,11 +1080,14 @@ def solve_llama_model_question(question: str, file: UploadFile = None):
             content={"error": f"Failed to launch Llama model: {str(e)}"},
             status_code=500
         )
-    
+
 # Function GA3Q1: LLM sentiment analysis
+
+
 def solve_llm_sentiment(question, file=None):
     try:
-        match = re.search(r"^(.*?)\s*Write a Python program", question, re.DOTALL)
+        match = re.search(r"^(.*?)\s*Write a Python program",
+                          question, re.DOTALL)
         if not match:
             return PlainTextResponse('{"error": "Could not extract the text for sentiment analysis."}')
 
@@ -1060,19 +1148,23 @@ else:
         return {"answer": code}
 
     except Exception as e:
-        return PlainTextResponse(f'{{"error": "Exception occurred: {str(e)}"}}')  
-     
+        return PlainTextResponse(f'{{"error": "Exception occurred: {str(e)}"}}')
+
 # Function GA3Q2: LLM code generation
+
+
 def extract_word_list(question):
-    match = re.search(r"List only the valid English words from these:(.*?)\s*\.\.\.", question, re.DOTALL)
-    
+    match = re.search(
+        r"List only the valid English words from these:(.*?)\s*\.\.\.", question, re.DOTALL)
+
     if not match:
         return None  # Return None if the pattern is not found
 
     # Extract the word list (trim any leading/trailing whitespace)
     word_list = match.group(1).strip()
-    
+
     return word_list
+
 
 def solve_token_cost(question, file=None):
     """
@@ -1084,7 +1176,7 @@ def solve_token_cost(question, file=None):
 
     # Extract the word list dynamically
     extracted_words = extract_word_list(question)
-    
+
     if extracted_words is None:
         return {"error": "Could not extract word list from the question."}
 
@@ -1108,7 +1200,8 @@ def solve_token_cost(question, file=None):
         response_json = response.json()
 
         # Extract total token usage
-        total_tokens = response_json.get('usage', {}).get('prompt_tokens', None)
+        total_tokens = response_json.get(
+            'usage', {}).get('prompt_tokens', None)
 
         if total_tokens is None:
             return {"error": "Failed to extract token usage from API response."}
@@ -1120,46 +1213,50 @@ def solve_token_cost(question, file=None):
         return {"error": f"API request failed with status code {response.status_code}: {response.text}"}
 
 # Function GA3Q3: Address generation
+
+
 def solve_address_generation(question, file=None):
     text = {
-  "model": "gpt-4o-mini",
-  "messages": [
-    { "role": "system", "content": "Respond in JSON" },
-    { "role": "user", "content": "Generate 10 random addresses in the US" }
-  ],
-  "response_format": {
-    "type": "json_schema",
-    "json_schema": {
-      "name": "address_response",
-      "strict": True,
-      "schema": {
-        "type": "object",
-        "properties": {
-          "addresses": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "apartment": { "type": "string" },
-                "latitude": { "type": "number" },
-                "county": { "type": "string" }
-              },
-              "required": ["apartment", "latitude", "county"],
-              "additionalProperties": False
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "system", "content": "Respond in JSON"},
+            {"role": "user", "content": "Generate 10 random addresses in the US"}
+        ],
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "address_response",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "addresses": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "apartment": {"type": "string"},
+                                    "latitude": {"type": "number"},
+                                    "county": {"type": "string"}
+                                },
+                                "required": ["apartment", "latitude", "county"],
+                                "additionalProperties": False
+                            }
+                        }
+                    },
+                    "required": ["addresses"],
+                    "additionalProperties": False
+                }
             }
-          }
-        },
-        "required": ["addresses"],
-        "additionalProperties": False
-      }
+        }
     }
-  }
-}
 
     text = json.dumps(text)
     return {"answer": text}
 
 # Function GA3Q4: LLM vision
+
+
 def solve_llm_vision(question: str, file: UploadFile = None) -> Dict[str, Any]:
     """
     Converts an uploaded image to a base64 data URL and returns the JSON
@@ -1193,8 +1290,8 @@ def solve_llm_vision(question: str, file: UploadFile = None) -> Dict[str, Any]:
                     "role": "user",
                     "content": [
                         {"type": "text", "text": "Extract text from this image?"},
-                        {"type": "image_url", "image_url": {"url": 
-            base64_url}}
+                        {"type": "image_url", "image_url": {"url":
+                                                            base64_url}}
                     ]
                 }
             ]
@@ -1205,8 +1302,10 @@ def solve_llm_vision(question: str, file: UploadFile = None) -> Dict[str, Any]:
 
     except Exception as e:
         return {"error": f"Failed to process image: {str(e)}"}
-    
+
 # Function GA3Q5: LLM embedding
+
+
 def solve_llm_embedding(question, file=None):
     # Define the regex pattern to match verification messages
     pattern = r"Dear user, please verify your transaction code \d+ sent to [\w\.-]+@[\w\.-]+\.\w+"
@@ -1227,6 +1326,8 @@ def solve_llm_embedding(question, file=None):
     return {"answer": response_json}
 
 # Function GA3Q6: embedding similarity
+
+
 def solve_embedding_similarity(question, file=None):
     try:
         code = '''import numpy as np
@@ -1252,10 +1353,13 @@ def most_similar(embeddings):
 
     except Exception as e:
         return PlainTextResponse(f'{{"error": "Exception occurred: {str(e)}"}}')
-    
+
+
 # Function GA3Q7: vector databases
 AIPROXY_TOKEN = os.getenv("AIPROXY_TOKEN")
 AIPROXY_URL = "http://aiproxy.sanand.workers.dev/openai/v1/embeddings"
+
+
 def solve_vector_databases(question: str, file: UploadFile = None):
     if main_app is None:
         return {"error": "Main app is not registered."}
@@ -1293,7 +1397,8 @@ def solve_vector_databases(question: str, file: UploadFile = None):
         if response.status_code == 200:
             return [item["embedding"] for item in response.json()["data"]]
         else:
-            raise HTTPException(status_code=response.status_code, detail=response.json())
+            raise HTTPException(
+                status_code=response.status_code, detail=response.json())
 
     def cosine_similarity(vec1, vec2):
         return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
@@ -1304,13 +1409,15 @@ def solve_vector_databases(question: str, file: UploadFile = None):
     async def get_similar_documents(request: SimilarityRequest):
         try:
             if not request.docs:
-                raise HTTPException(status_code=400, detail="The 'docs' list cannot be empty.")
+                raise HTTPException(
+                    status_code=400, detail="The 'docs' list cannot be empty.")
 
             embeddings = get_embeddings(request.docs + [request.query])
             doc_embeddings = embeddings[:-1]
             query_embedding = embeddings[-1]
 
-            similarities = [cosine_similarity(query_embedding, doc_emb) for doc_emb in doc_embeddings]
+            similarities = [cosine_similarity(
+                query_embedding, doc_emb) for doc_emb in doc_embeddings]
             top_indices = np.argsort(similarities)[-3:][::-1]
             top_matches = [request.docs[i] for i in top_indices]
 
@@ -1328,6 +1435,8 @@ def solve_vector_databases(question: str, file: UploadFile = None):
     }
 
 # Function GA3Q8: Function calling
+
+
 def solve_function_calling(question, file=None):
     if main_app is None:
         return {"error": "Main app not registered."}
@@ -1408,6 +1517,8 @@ def solve_function_calling(question, file=None):
     }
 
 # Function GA4Q1: HTML google sheets
+
+
 def solve_html_google_sheets(question, file=None):
     try:
         # Extract the page number from the question
@@ -1441,7 +1552,8 @@ def solve_html_google_sheets(question, file=None):
         df = tables[2]
 
         # Try to find the column labeled "0" (representing ducks)
-        duck_col = next((col for col in df.columns if str(col).strip() == '0'), None)
+        duck_col = next(
+            (col for col in df.columns if str(col).strip() == '0'), None)
         if duck_col is None:
             return {"error": "Could not find the 'Ducks' column (labeled '0')."}
 
@@ -1455,16 +1567,17 @@ def solve_html_google_sheets(question, file=None):
         return {"error": f"An error occurred: {str(e)}"}
 
 # Function GA4Q2: IMDb
+
+
 def solve_imdb(question, file=None):
     try:
         url = "https://www.imdb.com/search/title/?title_type=feature&user_rating=3.0,8.0&count=25"
         headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-}
-
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        }
 
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
@@ -1484,8 +1597,10 @@ def solve_imdb(question, file=None):
             year = year_tag.text.strip() if year_tag else "N/A"
 
             # Extract rating
-            rating_tag = item.find("div", class_="inline-block ratings-imdb-rating")
-            rating = rating_tag['data-value'] if rating_tag and rating_tag.has_attr('data-value') else "N/A"
+            rating_tag = item.find(
+                "div", class_="inline-block ratings-imdb-rating")
+            rating = rating_tag['data-value'] if rating_tag and rating_tag.has_attr(
+                'data-value') else "N/A"
 
             # Extract IMDb ID
             link = title_tag['href']
@@ -1506,6 +1621,8 @@ def solve_imdb(question, file=None):
         return {"error": str(e)}
 
 # Function GA4Q3: Wiki headings
+
+
 def solve_wiki_headings(question, file=None):
     if main_app is None:
         return {"error": "Main app not registered."}
@@ -1536,13 +1653,15 @@ def solve_wiki_headings(question, file=None):
             response = await client.get(country_url)
 
         if response.status_code != 200:
-            raise HTTPException(status_code=404, detail="Country Wikipedia page not found.")
+            raise HTTPException(
+                status_code=404, detail="Country Wikipedia page not found.")
 
         soup = BeautifulSoup(response.text, "html.parser")
         headings = soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
 
         if not headings:
-            raise HTTPException(status_code=404, detail="No headings found on the page.")
+            raise HTTPException(
+                status_code=404, detail="No headings found on the page.")
 
         markdown_outline = "## Contents\n\n"
         for heading in headings:
@@ -1561,8 +1680,9 @@ def solve_wiki_headings(question, file=None):
         "answer": f"{base_url}/api"
     }
 
+
 # Function GA4Q4: weather API
-from urllib.parse import urlencode
+
 
 def getlocid(city):
     """
@@ -1586,13 +1706,14 @@ def getlocid(city):
     response = requests.get(location_url)
     if response.status_code != 200:
         raise Exception("Failed to fetch location ID.")
-    
+
     result = response.json()
     try:
         locid = result['response']['results']['results'][0]['id']
         return locid
     except (KeyError, IndexError):
         raise Exception(f"Location ID for '{city}' not found.")
+
 
 def solve_weather_api(question, file=None):
     """
@@ -1605,7 +1726,8 @@ def solve_weather_api(question, file=None):
 
     # --- Step 1: Extract city from question
     try:
-        match = re.search(r"(?:in|for)\s+([A-Za-z\s]+)", question, re.IGNORECASE)
+        match = re.search(
+            r"(?:in|for)\s+([A-Za-z\s]+)", question, re.IGNORECASE)
         location = match.group(1).strip() if match else "New York"
     except Exception as e:
         return {"answer": json.dumps({"error": f"Could not extract location: {str(e)}"})}
@@ -1645,16 +1767,19 @@ def solve_weather_api(question, file=None):
             "answer": json.dumps(forecast_summary, indent=2)
         }
     except Exception as e:
-        return {"answer": json.dumps({"error": f"Error processing forecast: {str(e)}"})}    
-    
+        return {"answer": json.dumps({"error": f"Error processing forecast: {str(e)}"})}
+
 # Function GA4Q5: city bounding box
+
+
 def solve_city_bounding_box(question, file=None):
     try:
         # Extract city and country from the question using regex
-        match = re.search(r'the city ([\w\s]+?) in the country ([\w\s]+?) on the Nominatim API', question, re.IGNORECASE)
+        match = re.search(
+            r'the city ([\w\s]+?) in the country ([\w\s]+?) on the Nominatim API', question, re.IGNORECASE)
         if not match:
             return {"error": "Could not extract city and country from the question."}
-        
+
         city = match.group(1).strip()
         country = match.group(2).strip()
 
@@ -1668,7 +1793,8 @@ def solve_city_bounding_box(question, file=None):
         if 'boundingbox' not in location.raw:
             return {"error": "Bounding box data not available in response."}
 
-        bounding_box = location.raw['boundingbox']  # [south_lat, north_lat, west_lon, east_lon]
+        # [south_lat, north_lat, west_lon, east_lon]
+        bounding_box = location.raw['boundingbox']
         max_latitude = float(bounding_box[1])  # north_lat is the second entry
 
         max_latitude = json.dumps(max_latitude)
@@ -1678,13 +1804,16 @@ def solve_city_bounding_box(question, file=None):
         return {"error": f"Failed to retrieve location info: {str(e)}"}
 
 # Function GA4Q6: Hacker news
+
+
 def solve_hacker_news(question, file=None):
     try:
         # Step 1: Extract the topic between 'mentioning' and 'having'
-        match = re.search(r'mentioning\s+"?(.+?)"?\s+having', question, re.IGNORECASE)
+        match = re.search(r'mentioning\s+"?(.+?)"?\s+having',
+                          question, re.IGNORECASE)
         if not match:
             return {"error": "Could not extract the topic from the question."}
-        
+
         topic = match.group(1).strip()
         encoded_topic = urllib.parse.quote(topic)
 
@@ -1710,10 +1839,13 @@ def solve_hacker_news(question, file=None):
         return {"error": f"An error occurred: {str(e)}"}
 
 # Function GA4Q7: GitHub new user
+
+
 def solve_new_github_user(question, file=None):
     try:
         # Extract city and follower threshold from the question
-        city_match = re.search(r'located in the city ([\w\s]+?) with', question, re.IGNORECASE)
+        city_match = re.search(
+            r'located in the city ([\w\s]+?) with', question, re.IGNORECASE)
         followers_match = re.search(r'over (\d+) followers', question)
 
         if not city_match or not followers_match:
@@ -1730,7 +1862,8 @@ def solve_new_github_user(question, file=None):
         }
 
         # Define cut-off time
-        cutoff_time = datetime.strptime("2025-02-07T18:05:36", "%Y-%m-%dT%H:%M:%S")
+        cutoff_time = datetime.strptime(
+            "2025-02-07T18:05:36", "%Y-%m-%dT%H:%M:%S")
 
         response = requests.get(github_api_url, headers=headers)
         if response.status_code != 200:
@@ -1748,7 +1881,8 @@ def solve_new_github_user(question, file=None):
                 user_data = user_response.json()
                 created_at = user_data.get("created_at", "")
                 if created_at:
-                    created_at_dt = datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%SZ")
+                    created_at_dt = datetime.strptime(
+                        created_at, "%Y-%m-%dT%H:%M:%SZ")
                     if created_at_dt <= cutoff_time:
                         return {"answer": created_at}
 
@@ -1756,17 +1890,22 @@ def solve_new_github_user(question, file=None):
 
     except Exception as e:
         return {"error": f"An exception occurred: {str(e)}"}
-    
+
 # Function GA4Q8: Scheduled Github action
+
+
 def solve_scheduled_github_action(question, file=None):
     return {"answer": "https://github.com/PalakAnand30/GitHub-action-tds"}
 
+
 # Function GA4Q9: Extract tables
-import camelot
+
+
 def solve_extract_tables(question: str, file: UploadFile):
     try:
         # Step 1: Extract values from the question
-        subject_match = re.findall(r'total\s+(\w+)\s+marks|marks\s+in\s+(\w+)', question, re.IGNORECASE)
+        subject_match = re.findall(
+            r'total\s+(\w+)\s+marks|marks\s+in\s+(\w+)', question, re.IGNORECASE)
         score_match = re.search(r'scored\s+(\d+)', question)
         group_match = re.search(r'groups?\s+(\d+)-(\d+)', question)
 
@@ -1822,7 +1961,8 @@ def solve_extract_tables(question: str, file: UploadFile):
             return {"error": f"Subject '{subject}' column not found in any table."}
 
         combined_df = pd.concat(all_dfs, ignore_index=True)
-        combined_df["group"] = pd.to_numeric(combined_df["group"], errors="coerce")
+        combined_df["group"] = pd.to_numeric(
+            combined_df["group"], errors="coerce")
 
         filtered = combined_df[
             (combined_df["group"] >= group_start) &
@@ -1836,8 +1976,10 @@ def solve_extract_tables(question: str, file: UploadFile):
 
     except Exception as e:
         return {"error": f"An error occurred: {str(e)}"}
-        
+
 # Function GA4Q10: pdf to md
+
+
 def solve_pdf_to_md(question, file=None):
     try:
         # Step 1: Save uploaded file to a temp location
@@ -1874,6 +2016,8 @@ def solve_pdf_to_md(question, file=None):
         return {"error": f"Failed to process the PDF: {str(e)}"}
 
 # Function GA5Q1: Excel clean up
+
+
 def solve_excel_sales_cleanup(question: str, file: UploadFile):
     try:
         # Extract parameters from question
@@ -1911,7 +2055,8 @@ def solve_excel_sales_cleanup(question: str, file: UploadFile):
 
         # Normalize Product name
         df['Product'] = df['Product'].astype(str)
-        df['Product Name'] = df['Product'].str.split("/").str[0].str.strip().str.lower()
+        df['Product Name'] = df['Product'].str.split(
+            "/").str[0].str.strip().str.lower()
 
         # Clean Date field
         def parse_date(date):
@@ -1928,11 +2073,14 @@ def solve_excel_sales_cleanup(question: str, file: UploadFile):
         df['Date'] = df['Date'].apply(parse_date)
 
         # Clean and convert Sales and Cost
-        df['Sales'] = pd.to_numeric(df['Sales'].astype(str).str.replace("USD", "", regex=False).str.strip(), errors='coerce')
-        df['Cost'] = pd.to_numeric(df['Cost'].astype(str).str.replace("USD", "", regex=False).str.strip(), errors='coerce')
+        df['Sales'] = pd.to_numeric(df['Sales'].astype(str).str.replace(
+            "USD", "", regex=False).str.strip(), errors='coerce')
+        df['Cost'] = pd.to_numeric(df['Cost'].astype(str).str.replace(
+            "USD", "", regex=False).str.strip(), errors='coerce')
 
         # Fill missing cost with 50% of sales
-        df['Cost'] = df.apply(lambda row: row['Sales'] * 0.5 if pd.isna(row['Cost']) else row['Cost'], axis=1)
+        df['Cost'] = df.apply(lambda row: row['Sales'] *
+                              0.5 if pd.isna(row['Cost']) else row['Cost'], axis=1)
 
         # Step 4: Filter
         filtered_df = df[
@@ -1961,6 +2109,8 @@ def solve_excel_sales_cleanup(question: str, file: UploadFile):
         return {"error": f"Failed to process Excel file: {str(e)}"}
 
 # Function GA5Q2: Clean up student marks
+
+
 def solve_student_marks_cleanup(question: str, file: Optional[UploadFile] = None):
     try:
         if not file:
@@ -1973,7 +2123,8 @@ def solve_student_marks_cleanup(question: str, file: Optional[UploadFile] = None
 
         # Extract alphanumeric student ID (10+ chars before "::Marks" or "Marks")
         for line in content:
-            match = re.search(r'[-\s]([A-Z0-9]{8,})\s*(?=::?Marks)', line, re.IGNORECASE)
+            match = re.search(
+                r'[-\s]([A-Z0-9]{8,})\s*(?=::?Marks)', line, re.IGNORECASE)
             if match:
                 student_ids.append(match.group(1).strip())
 
@@ -1983,9 +2134,11 @@ def solve_student_marks_cleanup(question: str, file: Optional[UploadFile] = None
         return {"answer": json.dumps(len(unique_ids))}
 
     except Exception as e:
-        return {"error": f"Failed to process file: {str(e)}"} 
-    
+        return {"error": f"Failed to process file: {str(e)}"}
+
 # Function GA5Q3: Apache log requests
+
+
 def solve_log_requests(question, file=None):
     try:
         # Extract dynamic filters from the question
@@ -2002,15 +2155,14 @@ def solve_log_requests(question, file=None):
         end_hour = int(end_time_match.group(1))
         weekday_str = day_match.group(1).capitalize()
         weekday_map = {
-        "Monday": 0, "Mondays": 0,
-        "Tuesday": 1, "Tuesdays": 1,
-        "Wednesday": 2, "Wednesdays": 2,
-        "Thursday": 3, "Thursdays": 3,
-        "Friday": 4, "Fridays": 4,
-        "Saturday": 5, "Saturdays": 5,
-        "Sunday": 6, "Sundays": 6
-    }
-
+            "Monday": 0, "Mondays": 0,
+            "Tuesday": 1, "Tuesdays": 1,
+            "Wednesday": 2, "Wednesdays": 2,
+            "Thursday": 3, "Thursdays": 3,
+            "Friday": 4, "Fridays": 4,
+            "Saturday": 5, "Saturdays": 5,
+            "Sunday": 6, "Sundays": 6
+        }
 
         if weekday_str not in weekday_map:
             return {"error": f"Invalid weekday: {weekday_str}"}
@@ -2043,7 +2195,8 @@ def solve_log_requests(question, file=None):
                 # Check filters
                 if method == 'GET' and url.startswith(url_prefix) and 200 <= status < 300:
                     # Parse and convert time to GMT-0500
-                    log_time = datetime.strptime(data["time"], "%d/%b/%Y:%H:%M:%S %z")
+                    log_time = datetime.strptime(
+                        data["time"], "%d/%b/%Y:%H:%M:%S %z")
                     log_time = log_time.astimezone(pytz.timezone("Etc/GMT+5"))
 
                     if (
@@ -2058,9 +2211,11 @@ def solve_log_requests(question, file=None):
         }
 
     except Exception as e:
-        return {"error": f"Failed to process Apache log: {str(e)}"} 
+        return {"error": f"Failed to process Apache log: {str(e)}"}
 
 # Function GA5Q4: Apache log downloads
+
+
 def solve_log_downloads(question, file=None):
     try:
         url_pattern = r"under (\S+?)\s+on"
@@ -2091,7 +2246,8 @@ def solve_log_downloads(question, file=None):
                     size = int(match.group('size'))
 
                     try:
-                        log_datetime = datetime.strptime(time, "%d/%b/%Y:%H:%M:%S %z")
+                        log_datetime = datetime.strptime(
+                            time, "%d/%b/%Y:%H:%M:%S %z")
                         log_date = log_datetime.strftime("%Y-%m-%d")
                     except ValueError:
                         continue  # Skip malformed time
@@ -2114,10 +2270,10 @@ def solve_log_downloads(question, file=None):
     except Exception as e:
         return {"error": f"An error occurred: {str(e)}"}
 
+
 # Function GA5Q5: Clean up sales
-from fuzzywuzzy import fuzz
-from collections import defaultdict
-import ujson as json_parser
+
+
 def solve_cleanup_sales(question, file=None):
     try:
         # Step 1: Extract product, city, and sales threshold from question
@@ -2139,7 +2295,8 @@ def solve_cleanup_sales(question, file=None):
 
         # Step 3: Identify city name variations that match the target using fuzzy matching
         unique_cities = set(entry['city'].lower() for entry in data)
-        similar_cities = {city for city in unique_cities if fuzz.ratio(city, city_target) >= 85}
+        similar_cities = {city for city in unique_cities if fuzz.ratio(
+            city, city_target) >= 85}
 
         # Step 4: Sum all relevant entries
         total_sales = 0
@@ -2157,6 +2314,8 @@ def solve_cleanup_sales(question, file=None):
         return {"error": f"Failed to process JSON data: {str(e)}"}
 
 # Function GA5Q6: Parse partial JSON
+
+
 def solve_parse_partial_json(question, file=None):
     try:
         # Step 1: Compile regex pattern to find "sales": <number>
@@ -2179,10 +2338,13 @@ def solve_parse_partial_json(question, file=None):
         return {"error": f"Failed to compute total sales: {str(e)}"}
 
 # Function GA5Q7: Extracted nested JSON keys
-def solve_nested_jsonkeys(question, file=None)-> Dict[str, Union[int, str]]:
+
+
+def solve_nested_jsonkeys(question, file=None) -> Dict[str, Union[int, str]]:
     try:
         # Step 1: Extract the key name from the question
-        match = re.search(r'how many times does ([\w\d_]+) appear as a key', question, re.IGNORECASE)
+        match = re.search(
+            r'how many times does ([\w\d_]+) appear as a key', question, re.IGNORECASE)
         if not match:
             return {"error": "Could not extract key from question."}
 
@@ -2213,6 +2375,8 @@ def solve_nested_jsonkeys(question, file=None)-> Dict[str, Union[int, str]]:
         return {"error": f"Failed to process file: {str(e)}"}
 
 # Function GA5Q8: DuckDB social media
+
+
 def solve_duckdb_socialmedia(question, file=None):
     duckdb = """SELECT DISTINCT posts.post_id
                         FROM posts
@@ -2221,15 +2385,18 @@ def solve_duckdb_socialmedia(question, file=None):
                         AND comments.useful_stars = 3
                         ORDER BY posts.post_id ASC;"""
     return {"answer": duckdb}
-       
+
 # Function GA5Q9: Transcribe YouTube video
+
+
 def solve_transcribe_yt(question, file=None):
     try:
         # Step 1: Extract video URL and time range from the question
         import re
 
         url_match = re.search(r"(https?://[^\s]+)", question)
-        time_match = re.search(r'between (\d+(?:\.\d+)?) and (\d+(?:\.\d+)?) seconds', question)
+        time_match = re.search(
+            r'between (\d+(?:\.\d+)?) and (\d+(?:\.\d+)?) seconds', question)
 
         if not url_match or not time_match:
             return {"error": "Could not extract URL or time range from question."}
@@ -2239,7 +2406,8 @@ def solve_transcribe_yt(question, file=None):
         end_time = time_match.group(2)
 
         # Step 2: Temporary path for audio
-        temp_audio_file = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
+        temp_audio_file = tempfile.NamedTemporaryFile(
+            suffix=".mp3", delete=False)
         temp_audio_path = temp_audio_file.name
         temp_audio_file.close()
 
@@ -2277,6 +2445,8 @@ def solve_transcribe_yt(question, file=None):
         return {"error": f"An error occurred: {str(e)}"}
 
 # Function GA5Q10: Reconstruct image
+
+
 def solve_image_reconstruction(question: str, files: List[UploadFile]):
     try:
         # Separate mapping and image files
@@ -2296,11 +2466,13 @@ def solve_image_reconstruction(question: str, files: List[UploadFile]):
         content = mapping_file.file.read().decode("utf-8")
 
         # Extract rows like: | 2 | 1 | 0 | 0 |
-        mapping_pattern = re.findall(r'\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|', content)
+        mapping_pattern = re.findall(
+            r'\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|', content)
         if not mapping_pattern or len(mapping_pattern) != 25:
             return {"error": "Could not extract valid 5x5 mapping from the markdown file."}
 
-        mapping = [(int(r1), int(c1), int(r2), int(c2)) for r1, c1, r2, c2 in mapping_pattern]
+        mapping = [(int(r1), int(c1), int(r2), int(c2))
+                   for r1, c1, r2, c2 in mapping_pattern]
 
         # Step 2: Save the uploaded scrambled image
         with tempfile.NamedTemporaryFile(delete=False, suffix=".webp") as tmp_file:
@@ -2339,33 +2511,34 @@ def solve_image_reconstruction(question: str, files: List[UploadFile]):
     except Exception as e:
         return {"error": f"Failed to unscramble image: {str(e)}"}
 
+
 function_map = {
-    # GA 1 
-    "solve_vscode_question":solve_vscode_question,              
-    "solve_http_request_question": solve_http_request_question,         
-    "solve_prettier_hash_question": solve_prettier_hash_question,        
-    "solve_google_sheets_question": solve_google_sheets_question,        
-    "solve_excel_question": solve_excel_question,               
-    "solve_hidden_input_question": solve_hidden_input_question,        
-    "solve_count_wednesdays_question": solve_count_wednesdays_question,    
-    "solve_csv_extraction_question": solve_csv_extraction_question,      
-    "solve_json_sorting_question": solve_json_sorting_question,        
-    "solve_json_conversion_question": solve_json_conversion_question,      
-    "solve_div_sum_question": solve_div_sum_question,              
-    "solve_file_encoding_sum_question": solve_file_encoding_sum_question,   
-    "solve_github_repo_question": solve_github_repo_question,         
-    "solve_replace_text_question": solve_replace_text_question,         
+    # GA 1
+    "solve_vscode_question": solve_vscode_question,
+    "solve_http_request_question": solve_http_request_question,
+    "solve_prettier_hash_question": solve_prettier_hash_question,
+    "solve_google_sheets_question": solve_google_sheets_question,
+    "solve_excel_question": solve_excel_question,
+    "solve_hidden_input_question": solve_hidden_input_question,
+    "solve_count_wednesdays_question": solve_count_wednesdays_question,
+    "solve_csv_extraction_question": solve_csv_extraction_question,
+    "solve_json_sorting_question": solve_json_sorting_question,
+    "solve_json_conversion_question": solve_json_conversion_question,
+    "solve_div_sum_question": solve_div_sum_question,
+    "solve_file_encoding_sum_question": solve_file_encoding_sum_question,
+    "solve_github_repo_question": solve_github_repo_question,
+    "solve_replace_text_question": solve_replace_text_question,
     "solve_file_size_filter_question": solve_file_size_filter_question,
-    "solve_rename_files_question": solve_rename_files_question,  
-    "solve_compare_files_question": solve_compare_files_question, 
-    "solve_sqlite_query_question": solve_sqlite_query_question, 
-    # GA 2       
-    "solve_markdown_documentation_question": solve_markdown_documentation_question,  
+    "solve_rename_files_question": solve_rename_files_question,
+    "solve_compare_files_question": solve_compare_files_question,
+    "solve_sqlite_query_question": solve_sqlite_query_question,
+    # GA 2
+    "solve_markdown_documentation_question": solve_markdown_documentation_question,
     "solve_image_compression_question": solve_image_compression_question,
-    "solve_github_pages_question": solve_github_pages_question,   
-    "solve_colab_auth_question": solve_colab_auth_question,    
-    "solve_colab_brightness_question": solve_colab_brightness_question, 
-    "solve_vercel_api_question": solve_vercel_api_question,     
+    "solve_github_pages_question": solve_github_pages_question,
+    "solve_colab_auth_question": solve_colab_auth_question,
+    "solve_colab_brightness_question": solve_colab_brightness_question,
+    "solve_vercel_api_question": solve_vercel_api_question,
     "solve_github_action_question": solve_github_action_question,
     "solve_docker_image_question": solve_docker_image_question,
     "solve_fastapi_server_question": solve_fastapi_server_question,
@@ -2374,7 +2547,7 @@ function_map = {
     "solve_llm_sentiment": solve_llm_sentiment,
     "solve_token_cost": solve_token_cost,
     "solve_address_generation": solve_address_generation,
-    "solve_llm_vision" : solve_llm_vision,
+    "solve_llm_vision": solve_llm_vision,
     "solve_llm_embedding": solve_llm_embedding,
     "solve_embedding_similarity": solve_embedding_similarity,
     "solve_vector_databases": solve_vector_databases,

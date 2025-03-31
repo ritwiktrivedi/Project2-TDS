@@ -1,3 +1,5 @@
+from fastapi import UploadFile, File, Form
+from api.others import function_map  # ✅ not api.data — it's in others.py
 from fastapi import FastAPI, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -33,7 +35,6 @@ app.add_middleware(
 )
 
 # --- Import your function map (✅ Correct this line)
-from api.others import function_map  # ✅ not api.data — it's in others.py
 
 # --- Load TF-IDF vectorizer
 with open("api/data/vectorizer.pkl", "rb") as f:
@@ -48,9 +49,9 @@ with open("api/data/function_names.json", "r") as f:
 
 question_functions = [function_map[name] for name in function_names]
 
-from fastapi import UploadFile, File, Form
 
 # --- Main API endpoint
+
 @app.post("/api/")
 async def solve_question(
     question: str = Form(...),
@@ -70,6 +71,7 @@ async def solve_question(
         return {"error": "No good match found. Please refine your question."}
 
     matched_function = question_functions[best_match_idx]
-    print(f"✅ Matched to: {function_names[best_match_idx]} with score {best_match_score:.2f}")
+    print(
+        f"✅ Matched to: {function_names[best_match_idx]} with score {best_match_score:.2f}")
 
     return matched_function(question, file)

@@ -57,7 +57,7 @@ jsonschema-specifications==2024.10.1
 keystoneauth1==5.10.0
 keystonemiddleware==10.9.0
 kombu==5.5.0
-llvmlite==0.43.0
+llvmlite
 lxml==5.3.1
 magnum==19.0.0
 Mako==1.3.9
@@ -72,7 +72,7 @@ networkx==3.2.1
 ngrok==1.4.0
 numba==0.60.0
 numpy>=1.18.5,<2.0
-openai-whisper==20240930
+# openai-whisper
 opencv-python-headless==4.11.0.86
 openpyxl==3.1.5
 openstacksdk==4.4.0
@@ -119,7 +119,7 @@ pyee==12.1.1
 PyJWT==2.10.1
 pyOpenSSL==25.0.0
 pyparsing==3.2.2
-pypdf==3.17.4
+pypdf
 pypdfium2==4.30.1
 pyperclip==1.9.0
 PySocks==1.7.1
