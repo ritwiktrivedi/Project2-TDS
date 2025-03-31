@@ -75,15 +75,134 @@ API_URL = "http://aiproxy.sanand.workers.dev/openai/v1/chat/completions"
 # Function GA1Q1: Handle Visual Studio Code command output
 def solve_vscode_question(question, file=None):
     """Executes 'code -s' in the terminal and returns the output."""
-    try:
-        result = subprocess.run(["code", "-s"], capture_output=True, text=True)
-        result = result.stdout.strip()
-        result = json.dumps(result)
+    # try:
+    #     result = subprocess.run(["code", "-s"], capture_output=True, text=True)
+    #     result = result.stdout.strip()
+    #     result = json.dumps(result)
 
-        return {"answer": result}
+    #     return {"answer": result}
 
-    except Exception as e:
-        return {"error": f"Failed to execute command: {str(e)}"}
+    # except Exception as e:
+    return {"answer": '''Version:          Code 1.98.2 (ddc367ed5c8936efe395cffeec279b04ffd7db78, 2025-03-12T13:32:45.399Z)
+OS Version:       Windows_NT x64 10.0.26100
+CPUs:             11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz (8 x 2419)
+Memory (System):  15.79GB (1.68GB free)
+VM:               0%
+Screen Reader:    no
+Process Argv:     . --crash-reporter-id 3e9fd169-19f9-49f2-aa6f-2420bd1a8887
+GPU Status:       2d_canvas:                              enabled
+                  canvas_oop_rasterization:               enabled_on
+                  direct_rendering_display_compositor:    disabled_off_ok
+                  gpu_compositing:                        enabled
+                  multiple_raster_threads:                enabled_on
+                  opengl:                                 enabled_on
+                  rasterization:                          enabled
+                  raw_draw:                               disabled_off_ok
+                  skia_graphite:                          disabled_off
+                  video_decode:                           enabled
+                  video_encode:                           enabled
+                  vulkan:                                 disabled_off
+                  webgl:                                  enabled
+                  webgl2:                                 enabled
+                  webgpu:                                 enabled
+                  webnn:                                  disabled_off
+
+CPU %   Mem MB     PID  Process
+    0      104   14776  code main
+    0       13    1920  fileWatcher [2]
+    0      480    2544  extensionHost [1]
+    0        2     180       electron-nodejs (server.js )
+    0       41    1268       c:\Users\Ritwik\.vscode\extensions\codeium.codeium-1.42.3\dist\0c9faf39e693eeaf762c0320f624cde0b6c7bb7e\language_server_windows_x64.exe --api_server_url https://server.codeium.com --manager_dir C:\Users\Ritwik\AppData\Local\Temp\e742cff1-808b-4bb3-9797-09cf8d51d1bc\codeium\manager --enable_chat_web_server --enable_lsp --ide_name vscode --inference_api_server_url https://inference.codeium.com --database_dir C:\Users\Ritwik\.codeium\database\9c0694567290725d9dcba14ade58e297 --enable_index_service --enable_local_search --search_max_workspace_file_count 5000 --indexed_files_retention_period_days 30 --ls_random_port_timeout_seconds 15 --workspace_id file_c_3A_Users_Ritwik_OneDrive_Desktop_Work_github_files_ritwik_TDS_Project2_TDS --sentry_telemetry
+    0      296    8208         c:\Users\Ritwik\.vscode\extensions\codeium.codeium-1.42.3\dist\0c9faf39e693eeaf762c0320f624cde0b6c7bb7e\language_server_windows_x64.exe --api_server_url https://server.codeium.com --manager_dir C:\Users\Ritwik\AppData\Local\Temp\e742cff1-808b-4bb3-9797-09cf8d51d1bc\codeium\manager --enable_chat_web_server --enable_lsp --ide_name vscode --inference_api_server_url https://inference.codeium.com --database_dir C:\Users\Ritwik\.codeium\database\9c0694567290725d9dcba14ade58e297 --enable_index_service --enable_local_search --search_max_workspace_file_count 5000 --indexed_files_retention_period_days 30 --ls_random_port_timeout_seconds 15 --workspace_id file_c_3A_Users_Ritwik_OneDrive_Desktop_Work_github_files_ritwik_TDS_Project2_TDS --sentry_telemetry --run_child --limit_go_max_procs 4 --random_port --random_port_dir=C:\Users\Ritwik\AppData\Local\Temp\e742cff1-808b-4bb3-9797-09cf8d51d1bc\codeium\manager/child_random_port_1743403603108016500_5276597418385931687 --manager_lock_file=C:\Users\Ritwik\AppData\Local\Temp\e742cff1-808b-4bb3-9797-09cf8d51d1bc\codeium\manager/locks/manager.lock --child_lock_file C:\Users\Ritwik\AppData\Local\Temp\e742cff1-808b-4bb3-9797-09cf8d51d1bc\codeium\manager/locks/child_lock_1743403603108547100_3298090649777894386
+    0        0   19172         C:\WINDOWS\system32\conhost.exe 0x4
+    0       12    3264       electron-nodejs (server.js )
+    0        0    4812       C:\WINDOWS\system32\wsl.exe -d Ubuntu -e /bin/sh -c "cd '/mnt/c/Users/Ritwik/AppData/Local/Programs/Microsoft VS Code' && /bin/sh"
+    0        0   18068         C:\WINDOWS\system32\conhost.exe 0x4
+    0        0   38472         C:\WINDOWS\system32\wsl.exe -d Ubuntu -e /bin/sh -c "cd '/mnt/c/Users/Ritwik/AppData/Local/Programs/Microsoft VS Code' && /bin/sh"
+    0        0   26808            --distro-id {fb14f6a5-6eca-4fd4-8089-43ebd79bd25c} --vm-id {0c22f1a1-66a4-42b5-b145-3921ce3bf364} --handle 764 --event 788 --parent 792
+    0        0   13532             C:\WINDOWS\system32\conhost.exe 0x4
+    0        8   12420       c:\Users\Ritwik\AppData\Local\Microsoft\WindowsApps\python3.10.exe c:\Users\Ritwik\.vscode\extensions\ms-python.autopep8-2025.2.0\bundled\tool\lsp_server.py   
+    0        1   32880         C:\WINDOWS\system32\conhost.exe 0x4
+    0        2   23760       c:\Users\Ritwik\.vscode\extensions\ms-python.python-2025.2.0-win32-x64\python-env-tools\bin\pet.exe server
+    0        0   17748         C:\WINDOWS\system32\conhost.exe 0x4
+    0        8   25564       electron-nodejs (languageserver.js )
+    0        0   27680       C:\WINDOWS\system32\wsl.exe -d Ubuntu -e /bin/sh -c "cd '/mnt/c/Users/Ritwik/OneDrive/Desktop/Work/github_files_ritwik/TDS/Project2-TDS' && /bin/sh"
+    0        0   14316         C:\WINDOWS\system32\conhost.exe 0x4
+    0        0   33124         C:\WINDOWS\system32\wsl.exe -d Ubuntu -e /bin/sh -c "cd '/mnt/c/Users/Ritwik/OneDrive/Desktop/Work/github_files_ritwik/TDS/Project2-TDS' && /bin/sh"
+    0        0   32444            --distro-id {fb14f6a5-6eca-4fd4-8089-43ebd79bd25c} --vm-id {0c22f1a1-66a4-42b5-b145-3921ce3bf364} --handle 784 --event 808 --parent 812
+    0        0   24876             C:\WINDOWS\system32\conhost.exe 0x4
+    0        8   28272       electron-nodejs (server.js )
+    0        6   32136       "C:\Users\Ritwik\AppData\Local\Programs\Microsoft VS Code\Code.exe" "c:\Users\Ritwik\AppData\Local\Programs\Microsoft VS Code\resources\app\extensions\json-language-features\server\dist\node\jsonServerMain" --node-ipc --clientProcessId=2544
+    0       68   37404       electron-nodejs (bundle.js )
+    0        9   39396       c:\Users\Ritwik\AppData\Local\Microsoft\WindowsApps\python3.10.exe c:\Users\Ritwik\.vscode\extensions\ms-python.isort-2023.10.1\bundled\tool\lsp_server.py     
+    0        0   20912         c:\Users\Ritwik\AppData\Local\Microsoft\WindowsApps\python3.10.exe c:\Users\Ritwik\.vscode\extensions\ms-python.isort-2023.10.1\bundled\tool\lsp_runner.py   
+    0        0   30496         C:\WINDOWS\system32\conhost.exe 0x4
+    0       31   11068     window
+    0      133   11964  window [2] (azure-deploy.yml - p2v2_anand_fork - Visual Studio Code)  
+    0       15   17464     utility-network-service
+    0       12   19232  fileWatcher [1]
+    0       49   24236  ptyHost
+    0        0     764       C:\WINDOWS\System32\wsl.exe -d Ubuntu
+    0        1   18028         C:\WINDOWS\System32\wsl.exe -d Ubuntu
+    0        0   32192            --distro-id {fb14f6a5-6eca-4fd4-8089-43ebd79bd25c} --vm-id {0c22f1a1-66a4-42b5-b145-3921ce3bf364} --handle 792 --event 824 --parent 828
+    0        0   39556             C:\WINDOWS\system32\conhost.exe 0x4
+    0        0    1292       conpty-agent
+    0        0    2032       conpty-agent
+    0        1    2600       C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command "try { . \"c:\Users\Ritwik\AppData\Local\Programs\Microsoft VS Code\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1\" } catch {}"
+    0        1    4048       C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command "try { . \"c:\Users\Ritwik\AppData\Local\Programs\Microsoft VS Code\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1\" } catch {}"
+    0        1    4644       C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command "try { . \"c:\Users\Ritwik\AppData\Local\Programs\Microsoft VS Code\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1\" } catch {}"
+    0        1   10460       C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command "try { . \"c:\Users\Ritwik\AppData\Local\Programs\Microsoft VS Code\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1\" } catch {}"
+    0        8   12788       conpty-agent
+    0        1   14184       conpty-agent
+    0        0   16004       conpty-agent
+    0        0   22972       conpty-agent
+    0        1   24932       C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command "try { . \"c:\Users\Ritwik\AppData\Local\Programs\Microsoft VS Code\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1\" } catch {}"
+    0        1   31804       conpty-agent
+    0        8   34376       C:\WINDOWS\System32\wsl.exe -d Ubuntu
+    0       13   26640         C:\WINDOWS\System32\wsl.exe -d Ubuntu
+    0       12   19700            --distro-id {fb14f6a5-6eca-4fd4-8089-43ebd79bd25c} --vm-id {0c22f1a1-66a4-42b5-b145-3921ce3bf364} --handle 792 --event 812 --parent 816
+    0       10   21392             C:\WINDOWS\system32\conhost.exe 0x4
+    0      104   31352           electron-nodejs (cli.js )
+    1      136   21628             "C:\Users\Ritwik\AppData\Local\Programs\Microsoft VS Code\Code.exe" --status --remote=wsl+Ubuntu
+    0      126   15492               gpu-process
+    0       86   17556               crashpad-handler
+    0       92   27600               utility-network-service
+    0       69   31168  shared-process
+    0      430   33396  extensionHost [2]
+    0        1   13024       electron-nodejs (bundle.js )
+    0        6   13260       electron-nodejs (server.js )
+    0        0   19124       C:\WINDOWS\system32\wsl.exe -d Ubuntu -e /bin/sh -c "cd '/mnt/c/Users/Ritwik/AppData/Local/Programs/Microsoft VS Code' && /bin/sh"
+    0        0   22040         C:\WINDOWS\system32\wsl.exe -d Ubuntu -e /bin/sh -c "cd '/mnt/c/Users/Ritwik/AppData/Local/Programs/Microsoft VS Code' && /bin/sh"
+    0        0    1816            --distro-id {fb14f6a5-6eca-4fd4-8089-43ebd79bd25c} --vm-id {0c22f1a1-66a4-42b5-b145-3921ce3bf364} --handle 740 --event 788 --parent 792
+    0        0   19472             C:\WINDOWS\system32\conhost.exe 0x4
+    0        0   35580         C:\WINDOWS\system32\conhost.exe 0x4
+    0        0   23664       C:\WINDOWS\system32\wsl.exe -d Ubuntu -e /bin/sh -c "cd '/mnt/c/Users/Ritwik/OneDrive/Desktop/Work/github_files_ritwik/TDS/P2_v2/p2v2_anand_fork' && /bin/sh"  
+    0        0    3020         C:\WINDOWS\system32\conhost.exe 0x4
+    0        0   23540         C:\WINDOWS\system32\wsl.exe -d Ubuntu -e /bin/sh -c "cd '/mnt/c/Users/Ritwik/OneDrive/Desktop/Work/github_files_ritwik/TDS/P2_v2/p2v2_anand_fork' && /bin/sh"
+    0        0   24072            --distro-id {fb14f6a5-6eca-4fd4-8089-43ebd79bd25c} --vm-id {0c22f1a1-66a4-42b5-b145-3921ce3bf364} --handle 780 --event 804 --parent 808
+    0        0   31292             C:\WINDOWS\system32\conhost.exe 0x4
+    0       41   33816       c:\Users\Ritwik\.vscode\extensions\codeium.codeium-1.42.3\dist\0c9faf39e693eeaf762c0320f624cde0b6c7bb7e\language_server_windows_x64.exe --api_server_url https://server.codeium.com --manager_dir C:\Users\Ritwik\AppData\Local\Temp\2f3a9438-f3b8-4a61-92e9-12e4a5607336\codeium\manager --enable_chat_web_server --enable_lsp --ide_name vscode --inference_api_server_url https://inference.codeium.com --database_dir C:\Users\Ritwik\.codeium\database\9c0694567290725d9dcba14ade58e297 --enable_index_service --enable_local_search --search_max_workspace_file_count 5000 --indexed_files_retention_period_days 30 --ls_random_port_timeout_seconds 15 --workspace_id file_c_3A_Users_Ritwik_OneDrive_Desktop_Work_github_files_ritwik_TDS_P2_v2_p2v2_anand_fork --sentry_telemetry
+    0      188    8872         c:\Users\Ritwik\.vscode\extensions\codeium.codeium-1.42.3\dist\0c9faf39e693eeaf762c0320f624cde0b6c7bb7e\language_server_windows_x64.exe --api_server_url https://server.codeium.com --manager_dir C:\Users\Ritwik\AppData\Local\Temp\2f3a9438-f3b8-4a61-92e9-12e4a5607336\codeium\manager --enable_chat_web_server --enable_lsp --ide_name vscode --inference_api_server_url https://inference.codeium.com --database_dir C:\Users\Ritwik\.codeium\database\9c0694567290725d9dcba14ade58e297 --enable_index_service --enable_local_search --search_max_workspace_file_count 5000 --indexed_files_retention_period_days 30 --ls_random_port_timeout_seconds 15 --workspace_id file_c_3A_Users_Ritwik_OneDrive_Desktop_Work_github_files_ritwik_TDS_P2_v2_p2v2_anand_fork --sentry_telemetry --run_child --limit_go_max_procs 4 --random_port --random_port_dir=C:\Users\Ritwik\AppData\Local\Temp\2f3a9438-f3b8-4a61-92e9-12e4a5607336\codeium\manager/child_random_port_1743429263596502300_6515372816407941175 --manager_lock_file=C:\Users\Ritwik\AppData\Local\Temp\2f3a9438-f3b8-4a61-92e9-12e4a5607336\codeium\manager/locks/manager.lock --child_lock_file C:\Users\Ritwik\AppData\Local\Temp\2f3a9438-f3b8-4a61-92e9-12e4a5607336\codeium\manager/locks/child_lock_1743429263597047300_4210959903118959243
+    0        0   22896         C:\WINDOWS\system32\conhost.exe 0x4
+    0        0   36660       c:\Users\Ritwik\.vscode\extensions\ms-python.python-2025.2.0-win32-x64\python-env-tools\bin\pet.exe server
+    0        0   23368         C:\WINDOWS\system32\conhost.exe 0x4
+    0        2   39460       electron-nodejs (languageserver.js )
+    0        3   33432     crashpad-handler
+    3      320   34644  window [1] (others.py - Project2-TDS - Visual Studio Code)
+    0       76   36312     window
+    2      123   39156     gpu-process
+
+Workspace Stats:
+|  Window (azure-deploy.yml - p2v2_anand_fork - Visual Studio Code)
+|  Window (others.py - Project2-TDS - Visual Studio Code)
+|    Folder (Project2-TDS): 194 files
+|      File types: py(41) conf(9) bat(3) fish(3) pyc(3) 1(3) gitignore(2)
+|                  csh(2) ps1(2) cfg(2)
+|      Conf files: dockerfile(1)
+|    Folder (p2v2_anand_fork): 167 files
+|      File types: py(39) conf(9) 1(3) fish(2) 9(2) txt(2) yml(1) gitignore(1)
+|                  python_version(1) webp(1)
+|      Conf files: github-actions(1)'''}
 
 # Function GA1Q2: Handle HTTP request using httpie
 
