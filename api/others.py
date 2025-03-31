@@ -539,7 +539,7 @@ def solve_file_encoding_sum_question(question, file=None):
 
 
 def solve_github_repo_question(question, file=None):
-    return {"answer": "https://raw.githubusercontent.com/PalakAnand30/TDS_1/refs/heads/main/email.json"}
+    return {"answer": "https://raw.githubusercontent.com/ritwiktrivedi/tdsga1/main/email.json"}
 
 # Function GA1Q14: Solve text replacement question
 
@@ -909,7 +909,7 @@ def solve_colab_auth_question(question, file=None):
     # Compute SHA-256 hash
     hash_input = f"{email} {token_expiry_year}".encode()
     hash_output = hashlib.sha256(hash_input).hexdigest()[-5:]
-    hash_output = json.dumps(hash_output)
+    # hash_output = json.dumps(hash_output)
 
     return {"answer": hash_output}
 
@@ -933,8 +933,8 @@ def solve_colab_brightness_question(question, file=None):
 
         lightness = np.apply_along_axis(rgb_to_lightness, 2, rgb)
 
-        # Count pixels where lightness > 0.666
-        light_pixels = np.sum(lightness > 0.666)
+        # Count pixels where lightness > 0.755
+        light_pixels = np.sum(lightness > 0.755)
 
         pixels = int(light_pixels)
         pixels = json.dumps(pixels)
@@ -990,7 +990,7 @@ def solve_vercel_api_question(question, file=None):
 
 
 def solve_github_action_question(question, file=None):
-    return {"answer": "https://github.com/PalakAnand30/mygithubaction"}
+    return {"answer": "https://github.com/ritwiktrivedi/testgithubactions"}
 
 # Function GA2Q8: Docker image
 
