@@ -996,7 +996,7 @@ def solve_github_action_question(question, file=None):
 
 
 def solve_docker_image_question(question, file=None):
-    return {"answer": "https://hub.docker.com/repository/docker/palakanand30/first_docker_task/general"}
+    return {"answer": "https://hub.docker.com/repository/docker/ritwiktrivedi/tdsga2tag/general"}
 
 
 # Function GA2Q9: FastAPI
@@ -1895,7 +1895,7 @@ def solve_new_github_user(question, file=None):
 
 
 def solve_scheduled_github_action(question, file=None):
-    return {"answer": "https://github.com/PalakAnand30/GitHub-action-tds"}
+    return {"answer": "https://github.com/ritwiktrivedi/testgithubactions/"}
 
 
 # Function GA4Q9: Extract tables
