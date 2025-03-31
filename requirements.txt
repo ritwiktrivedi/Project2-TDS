@@ -147,7 +147,7 @@ rfc3986==2.0.0
 Routes==2.5.1
 rpds-py==0.23.1
 scikit-learn==1.6.1
-scipy==1.13.1
+# scipy==1.13.1
 selenium==4.30.0
 sgmllib3k==1.0.0
 simplegeneric==0.8.1
